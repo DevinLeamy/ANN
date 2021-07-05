@@ -1,0 +1,4 @@
+./main.o
+main.o.dSYM/
+res/
+.DS_Store

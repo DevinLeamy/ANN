@@ -79,7 +79,6 @@ struct Matrix *new_matrix(int rows, int cols, double **vals)
 // display
 void display_matrix(struct Matrix *matrix)
 {
-  // printf("%5.3f\n", (matrix->vals)[matrix->rows - 1][matrix->cols - 1]);
   for (int i = 0; i < matrix->rows; i++) {
     for (int j = 0; j < matrix->cols; j++)
       printf("%5.3f ", (matrix->vals)[i][j]);
