@@ -1,5 +1,5 @@
 CC = gcc 
-SRC = $(wildcard ./*.c)
+SRC = $(wildcard ./*.c) $(wildcard ./**/*.c)
 
 all: build run
 

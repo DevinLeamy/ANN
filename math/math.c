@@ -1,4 +1,5 @@
 #include "./math.h"
+#include <math.h>
 #include <time.h>
 #include <stdlib.h>
 
@@ -11,8 +12,20 @@ static double _normalize(long min_x, long max_x, long x)
 // generate random double on (-1, 1)
 double random_dbl()
 {
-  srand(time(NULL)); // should only be called once
   long x = rand(); 
   double x_nor = _normalize(0l, RAND_MAX, x);
   return x_nor;
+}
+
+// sigmoid
+double sigmoid(double x) 
+{
+  return 1.0 / (1.0 + exp(-1.0 * x));
+}
+
+
+void math_init() 
+{
+  // init random
+  srand(time(NULL));
 }
