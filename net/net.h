@@ -2,25 +2,30 @@
 #define NET_H
 
 #include "../matrix/matrix.h"
+#include "../vector/vector.h"
 #include "../math/math.h"
+#include <assert.h>
 
-#define BIAS_MTX(self, i) (self->biases)[i]
-#define WGT_MTX(self, i) (self->weights)[i]
+typedef SVector (*ActivationFn)(SVector, int);
 
-#define LAYERS(net) (2 + net->hidden_cnt)
-
-#define INPUT_LY(net, depth) (depth == 0)
-#define OUTPUT_LY(net, depth) (depth == LAYERS(net) - 1)
-#define HDN_LY(net, depth) !INPUT_LY(net, depth) && !OUTPUT_LY(net, depth)
-
-struct Net {
-  int input_n, output_n, *hidden_n, hidden_cnt;
-  struct Matrix **weights; 
-  struct Matrix **biases;
-  Activation act;
-  int (*forward)(struct Net *self, double *input);
+struct Layer {
+  SMatrix weights;
+  SVector biases;
+  ActivationFn activation;
 };
 
-struct Net *new_net(int input_n, int output_n, int *hidden_n, int hidden_cnt, Activation act);
+typedef struct Layer *Layer;
+
+struct Net {
+  int IN, OUT, H1, H2;
+  Layer l1;
+  Layer l2;
+  Layer l3;
+};
+
+typedef struct Net *Net;
+
+Net new_net(int *layers);
+int (*forward)(Net, Vector);
 
 #endif

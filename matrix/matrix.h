@@ -2,22 +2,26 @@
 #define MATRIX_H
 
 #include "../math/math.h"
+#include "../vector/vector.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-#define RANDOM_INIT 1
+typedef double** Matrix;
+typedef double* Vector;
 
-struct Matrix {
+struct SMatrix {
   int rows, cols;
-  double **vals;
-  struct Matrix *(*dot)(struct Matrix *self, struct Matrix *x);
-  struct Matrix *(*add)(struct Matrix *self, struct Matrix *x);
-  void (*free)(struct Matrix *self); 
-  void (*apply)(struct Matrix *self, Activation f);
+  Matrix vals;
 };
 
-struct Matrix *new_matrix(int rows, int cols, double **vals);
-// make display a 'method'
-void display_matrix(struct Matrix *matrix);
-double **init_2d(int rows, int cols, int rand);
-double *init_arr(int len, int rand);
+typedef struct SMatrix *SMatrix;
 
+SMatrix new_smatrix(int, int, enum FillType);
+Matrix new_matrix(int, int, enum FillType);
+
+void display_smatrix(SMatrix);
+
+void free_matrix(Matrix, int);
+void free_smatrix(SMatrix);
 #endif
