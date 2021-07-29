@@ -1,66 +1,102 @@
-#include "./net.h"
+#include "net.h"
 #include "../matrix/matrix.h"
-#include <stdlib.h>
+#include "../vector/vector.h"
 #include <string.h>
+#include <stdlib.h>
 #include <assert.h>
 
-// static int _forward(struct Net *self, double *input) 
-// {
-//   // format input
-//   double **input_f = init_2d(self->input_n, 1, RANDOM_INIT);
-//   for (int i = 0; i < self->input_n; i++)
-//     input_f[i][0] = input[i];
+SVector get_inactivated(SVector previous_activated, SMatrix weights, SVector biases) {
+  SVector dot_product = dot_matrix_vector(weights, previous_activated); 
+  dot_product = add_vectors(dot_product, biases, MODIFY_TRUE);
 
-//   // result matrix
-//   struct Matrix *x = new_matrix(self->input_n, 1, input_f); 
+  return dot_product;
+}
 
-//   for (int i = 0; i < LAYERS(self) - 1; i++) {
-//     assert(x->cols == 1);
+SVector get_activated(SVector previous_inactivated, ActivationFn activation) {
+  return activation(previous_inactivated, DERIVATIVE_FALSE); 
+}
 
-//     struct Matrix *wgt_mtx = (self->weights)[i];
-//     struct Matrix *bias_mtx = (self->biases)[i];
+Cache forward(Net net, SVector x) {
+  Cache cache = new_cache();
+  cache->l0->activated = x;
 
-//     // dot(weights, prev)
-//     struct Matrix *new_x = wgt_mtx->dot(wgt_mtx, x); 
-//     x->free(x);
-//     x = NULL;
+  cache->l1->inactivated = get_inactivated(cache->l0->activated, net->l1->weights, net->l1->biases);
+  cache->l1->activated = get_activated(cache->l1->inactivated, net->l1->activation);
 
-//     // add biases
-//     x = new_x->add(new_x, bias_mtx);
+  cache->l2->inactivated = get_inactivated(cache->l1->activated, net->l2->weights, net->l2->biases);
+  cache->l2->activated = get_activated(cache->l2->inactivated, net->l2->activation);
 
-//     // activation function
-//     x->apply(x, self->act);
+  cache->l3->inactivated = get_inactivated(cache->l2->activated, net->l3->weights, net->l3->biases);
+  cache->l3->activated = get_activated(cache->l3->inactivated, net->l3->activation);
 
-//     new_x->free(new_x); 
-//     new_x = NULL;
-// }
+  return cache;
+}
 
-//   assert(x->cols == 1);
+// only relavent to the last layer
+SVector get_derivative_cost_wrt_activated(SVector y_hat, SVector y) {
+  SVector difference = sub_vectors(y_hat, y, MODIFY_FALSE);
+  SVector scaled = scale_vector(difference, 2.0, MODIFY_TRUE);
 
-//   // idx of max value
-//   int res = 0;
-//   double c_max = (x->vals)[0][0];
+  return scaled;
+}
 
-//   for (int i = 0; i < x->rows; i++) {
-//     if (c_max < (x->vals)[i][0]) {
-//       c_max = (x->vals)[i][0];
-//       res = i;
-//     }
-//   }
+SVector get_derivate_activated_wrt_inactivated(SVector inactivated, ActivationFn activation) {
+  return activation(inactivated, DERIVATIVE_TRUE);
+}
 
-//   x->free(x);
-//   x = NULL;
+SVector get_bias_grads(SVector activated_wrt_inactivated, SVector cost_wrt_activated) {
+  return multiply_vectors(activated_wrt_inactivated, cost_wrt_activated, MODIFY_FALSE); 
+}
 
-//   return res;
-// }
+SMatrix get_weight_grads(SVector previous_activated, SVector bias_grads) {
+  return outer_product(bias_grads, previous_activated);
+}
+
+SVector get_activated_grads(SMatrix weights, SVector bias_grads) {
+  SMatrix weights_transposed = transpose_matrix(weights);
+  SVector activated_grads = dot_matrix_vector(weights_transposed, bias_grads);
+
+  free_smatrix(weights_transposed);
+  return activated_grads; 
+}
+
+Cache backwards(Net net, Cache cache, SVector y) {
+  SVector y_hat = cache->l3->activated; 
+
+  // create a function for each layer
+  {
+    cache->l3->activated_grads = get_derivative_cost_wrt_activated(y_hat, y); 
+    cache->l3->inactivated_grads = get_derivate_activated_wrt_inactivated(cache->l3->inactivated, net->l3->activation);
+
+    cache->l3->bias_grads = get_bias_grads(cache->l3->inactivated_grads, cache->l3->activated_grads);
+    cache->l3->weight_grads = get_weight_grads(cache->l2->activated, cache->l3->bias_grads);
+  }
+
+  {
+    cache->l2->activated_grads = get_activated_grads(net->l3->weights, cache->l3->bias_grads); 
+    cache->l2->inactivated_grads = get_derivate_activated_wrt_inactivated(cache->l2->inactivated, net->l2->activation);
+
+    cache->l2->bias_grads = get_bias_grads(cache->l2->inactivated_grads, cache->l2->activated_grads);
+    cache->l2->weight_grads = get_weight_grads(cache->l1->activated, cache->l2->bias_grads);
+  }
+
+  {
+    cache->l1->activated_grads = get_activated_grads(net->l2->weights, cache->l2->bias_grads); 
+    cache->l1->inactivated_grads = get_derivate_activated_wrt_inactivated(cache->l1->inactivated, net->l1->activation);
+
+    cache->l1->bias_grads = get_bias_grads(cache->l1->inactivated_grads, cache->l1->activated_grads);
+    cache->l1->weight_grads = get_weight_grads(cache->l0->activated, cache->l1->bias_grads);
+  }
+
+  return cache;
+}
 
 static SMatrix _new_weights(int p_nodes, int n_nodes) {
   SMatrix weights = new_smatrix(n_nodes, p_nodes, FILL_RANDOM);
-
   return weights;
 }
 
-static SMatrix _new_biases(int nodes) {
+static SVector _new_biases(int nodes) {
   SVector biases = new_svector(nodes, FILL_RANDOM);
   return biases;
 }

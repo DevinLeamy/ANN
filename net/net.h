@@ -1,10 +1,8 @@
 #ifndef NET_H
 #define NET_H
 
-#include "../matrix/matrix.h"
-#include "../vector/vector.h"
 #include "../math/math.h"
-#include <assert.h>
+#include "../cache/cache.h"
 
 typedef SVector (*ActivationFn)(SVector, int);
 
@@ -25,7 +23,8 @@ struct Net {
 
 typedef struct Net *Net;
 
-Net new_net(int *layers);
-int (*forward)(Net, Vector);
+Net new_net(int *);
+Cache forward(Net, SVector);
+Cache backwards(Net, Cache, SVector);
 
 #endif

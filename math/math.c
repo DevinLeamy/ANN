@@ -1,6 +1,5 @@
 #include "math.h"
 
-
 // normalize on (-1, 1)
 static double _normalize(long min_x, long max_x, long x) {
   return (double) (x - min_x) / (max_x - min_x);
@@ -9,8 +8,7 @@ static double _normalize(long min_x, long max_x, long x) {
 // range(-1, 1) 
 double random_double() {
   long x = rand(); 
-  double x_normalized = _normalize(0l, RAND_MAX, x);
-  return x_normalized;
+  return _normalize(0l, RAND_MAX, x);
 }
 
 double softmax(SVector v, int index, int derivative) {
@@ -90,26 +88,18 @@ double sub(double a, double b) {
   return a - b;
 }
 
-struct Matrix *component_wise_apply_matrix(SMatrix m1, SMatrix m2, double (*func)(double, double), int modify) {
+double multiply(double a, double b) {
+  return a * b;
+}
+
+SMatrix component_wise_apply_matrix(SMatrix m1, SMatrix m2, double (*func)(double, double), int modify) {
   assert(m1->rows == m2->rows && m1->cols == m2->cols);
-  SMatrix res = (modify)? m1 : new_matrix(m1->rows, m1->cols, NULL);
+  SMatrix res = (modify)? m1 : new_smatrix(m1->rows, m1->cols, FILL_ZERO);
 
   for (int i = 0; i < m1->rows; i++) 
     for (int j = 0; j < m1->cols; j++)
       res->vals[i][j] = func(m1->vals[i][j], m2->vals[i][j]);
   return res;
-}
-
-SMatrix sub_matrices(SMatrix m1, SMatrix m2, int modify) {
-  return component_wise_apply_matrix(m1, m2, sub, modify);  
-}
-
-SVector add_vectors(SVector v1, SVector v2, int modify) {
-  return component_wise_apply_vector(v1, v2, add, modify);
-}
-
-SMatrix add_matrices(SMatrix m1, SMatrix m2, int modify) {
-  return component_wise_apply_matrix(m1, m2, add, modify);
 }
 
 SVector component_wise_apply_vector(SVector v1, SVector v2, double (*func)(double, double), int modify) {
@@ -118,16 +108,6 @@ SVector component_wise_apply_vector(SVector v1, SVector v2, double (*func)(doubl
 
   for (int i = 0; i < v1->length; i++)
     res->vals[i] = func(v1->vals[i], v2->vals[i]);
-  return res;
-}
-
-SMatrix component_wise_apply_matrix(SMatrix m1, SMatrix m2, double (*func)(double, double), int modify) {
-  assert(m1->rows == m2->rows && m1->cols == m2->cols);
-  SMatrix res = (modify)? m1 : new_matrix(m1->rows, m1->cols, NULL);
-
-  for (int i = 0; i < m1->rows; i++) 
-    for (int j = 0; j < m1->cols; j++)
-      res->vals[i][j] = func(m1->vals[i][j], m2->vals[i][j]);
   return res;
 }
 
@@ -145,6 +125,34 @@ SVector apply_vector(SVector v, double (*func)(double), int modify) {
 
   for (int i = 0; i < v->length; i++)
     res->vals[i] = func(v->vals[i]);
+  return res;
+}
+
+SMatrix add_matrices(SMatrix m1, SMatrix m2, int modify) {
+  return component_wise_apply_matrix(m1, m2, add, modify);
+}
+
+SMatrix sub_matrices(SMatrix m1, SMatrix m2, int modify) {
+  return component_wise_apply_matrix(m1, m2, sub, modify);  
+}
+
+SVector add_vectors(SVector v1, SVector v2, int modify) {
+  return component_wise_apply_vector(v1, v2, add, modify);
+}
+
+SVector sub_vectors(SVector v1, SVector v2, int modify) {
+  return component_wise_apply_vector(v1, v2, sub, modify);
+}
+
+SVector multiply_vectors(SVector v1, SVector v2, int modify) {
+  return component_wise_apply_vector(v1, v2, multiply, modify);
+}
+
+SVector scale_vector(SVector v, double factor, int modify) {
+  SVector res = (modify)? v : new_svector(v->length, FILL_ZERO);
+
+  for (int i = 0; i < v->length; i++)
+    res->vals[i] = v->vals[i] * factor;
   return res;
 }
 
