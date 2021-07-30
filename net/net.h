@@ -3,6 +3,7 @@
 
 #include "../math/math.h"
 #include "../cache/cache.h"
+#include "../mnist/mnist.h" 
 
 typedef SVector (*ActivationFn)(SVector, int);
 
@@ -26,5 +27,6 @@ typedef struct Net *Net;
 Net new_net(int *);
 Cache forward(Net, SVector);
 Cache backwards(Net, Cache, SVector);
+void train(Net, )
 
 #endif
