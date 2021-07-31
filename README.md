@@ -1,5 +1,5 @@
 # MNIST-In-C
-Throwing Pytorch to the Curb
+Throwing PyTorch to the curb
 
 Tackling MNIST with the standard library in C. <br/>
 Best accuracy: _95.65%_
