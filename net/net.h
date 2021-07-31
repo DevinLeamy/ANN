@@ -17,6 +17,7 @@ typedef struct Layer *Layer;
 
 struct Net {
   int IN, OUT, H1, H2;
+  double learning_rate;
   Layer l1;
   Layer l2;
   Layer l3;
@@ -24,9 +25,10 @@ struct Net {
 
 typedef struct Net *Net;
 
-Net new_net(int *);
+Net new_net(int *, double learning_rate);
 Cache forward(Net, SVector);
-Cache backwards(Net, Cache, SVector);
-void train(Net, )
+void backwards(Net, Cache, SVector);
+void train(Net, struct MNIST, int, int);
+double test(Net, struct MNIST);
 
 #endif

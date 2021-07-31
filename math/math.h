@@ -22,6 +22,7 @@ double random_double();
 double add(double, double);
 double sub(double, double);
 double multiply(double, double);
+double percentage(int, int);
 void math_init();
 
 // activations
@@ -52,6 +53,10 @@ double sum_vector(SVector);
 double sum_matrix(SMatrix);
 
 SMatrix transpose_matrix(SMatrix);
+SMatrix scale_matrix(SMatrix, double, int);
 SVector scale_vector(SVector, double, int);
+
+int argmax_vector(SVector);
+
 
 #endif

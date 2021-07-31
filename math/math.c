@@ -14,7 +14,7 @@ double random_double() {
 double softmax(SVector v, int index, int derivative) {
   if (derivative)
     return softmax(v, index, FALSE) * (1 - softmax(v, index, FALSE));
-  SVector v_exp = apply_vector(v, exp, FALSE);
+  SVector v_exp = apply_vector(v, exp, MODIFY_FALSE);
   double v_exp_sum = sum_vector(v_exp);
 
   double softmax = v_exp->vals[index] / v_exp_sum;
@@ -24,7 +24,7 @@ double softmax(SVector v, int index, int derivative) {
 }
 
 SVector softmax_vector(SVector v, int derivative) {
-  SVector v_exp = apply_vector(v, exp, TRUE);
+  SVector v_exp = apply_vector(v, exp, MODIFY_FALSE);
   double v_exp_sum = sum_vector(v_exp);
   if (derivative) {
     for (int i = 0; i < v->length; i++) {
@@ -46,9 +46,11 @@ double sigmoid(double x, int derivative) {
 }
 
 SVector sigmoid_vector(SVector v, int derivative) {
+  SVector res = new_svector(v->length, FILL_ZERO);
+
   for (int i = 0; i < v->length; i++)
-    v->vals[i] = sigmoid(v->vals[i], derivative);
-  return v;
+    res->vals[i] = sigmoid(v->vals[i], derivative);
+  return res;
 }
 
 double sum_vector(SVector v) {
@@ -78,6 +80,10 @@ SVector dot_matrix_vector(SMatrix m, SVector v) {
   }
 
   return prod;
+}
+
+double percentage(int a, int b) {
+  return a / (double) b * 100;
 }
 
 double add(double a, double b) {
@@ -156,6 +162,15 @@ SVector scale_vector(SVector v, double factor, int modify) {
   return res;
 }
 
+SMatrix scale_matrix(SMatrix m, double factor, int modify) {
+  SMatrix res = (modify)? m : new_smatrix(m->rows, m->cols, FILL_ZERO);
+  
+  for (int i = 0; i < m->rows; i++)
+    for (int j = 0; j < m->cols; j++)
+      res->vals[i][j] = m->vals[i][j] * factor;
+  return res;
+}
+
 SMatrix outer_product(SVector v1, SVector v2) {
   SMatrix product = new_smatrix(v1->length, v2->length, FILL_ZERO);
 
@@ -173,6 +188,19 @@ SMatrix transpose_matrix(SMatrix m) {
     for (int j = 0; j < m->cols; j++)
       transposed->vals[j][i] = m->vals[i][j];
   return transposed;
+}
+
+int argmax_vector(SVector v) {
+  double max_val = v->vals[0]; 
+  int max_idx = 0;
+
+  for (int i = 0; i < v->length; i++)
+    if (v->vals[i] > max_val) {
+      max_val = v->vals[i];
+      max_idx = i;
+    }
+  
+  return max_idx;
 }
 
 void math_init() {

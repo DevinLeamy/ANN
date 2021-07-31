@@ -6,12 +6,12 @@
 #include <stdlib.h>
 
 struct CLayer {
-  SVector inactivated;
   SVector activated; 
+  SVector activated_grads;
+  SVector inactivated;
+  SVector inactivated_grads;
   SVector bias_grads;
   SMatrix weight_grads;
-  SVector activated_grads;
-  SVector inactivated_grads;
 };
 
 typedef struct CLayer *CLayer;

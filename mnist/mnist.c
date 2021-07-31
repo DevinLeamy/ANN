@@ -21,8 +21,10 @@ static SVector *_preprocess_image_data(uint8_t *raw_image_data, int image_cnt) {
 
   for (int i = 0; i < image_cnt; i++) {
     SVector image = new_svector(IMAGE_SIZE, FILL_ZERO);
-    for (int j = 0; j < IMAGE_SIZE; j++) 
+    for (int j = 0; j < IMAGE_SIZE; j++)
       image->vals[j] = raw_image_data[IMAGE_DATA_BUFFER + i * IMAGE_SIZE + j] / 255.0;
+
+    parsed_image_data[i] = image;
   }
   return parsed_image_data;
 }
@@ -33,6 +35,8 @@ static SVector *_preprocess_label_data(uint8_t *raw_label_data, int label_cnt) {
   for (int i = 0; i < label_cnt; i++) {
     SVector label = new_svector(LABEL_SIZE, FILL_ZERO);
     label->vals[raw_label_data[LABEL_DATA_BUFFER + i]] = 1.0; 
+
+    parsed_label_data[i] = label;
   }
   return parsed_label_data;
 }
@@ -43,6 +47,7 @@ static SVector *_parse_image_file(char *path, int image_cnt) {
   uint8_t *raw_image_data = _read_raw_data(path, file_length); 
   SVector *parsed_image_data = _preprocess_image_data(raw_image_data, image_cnt);
 
+  free(raw_image_data);
   return parsed_image_data;
 }
 
@@ -51,11 +56,9 @@ static SVector *_parse_label_file(char *path, int label_cnt) {
   unsigned long file_length = label_cnt + IMAGE_DATA_BUFFER; 
 
   uint8_t *raw_label_data = _read_raw_data(path, file_length);
-  for (int i = 0; i < 20; i++)
-    printf("%d ", raw_label_data[i]);
-  puts("--");
   SVector *parsed_label_data = _preprocess_label_data(raw_label_data, label_cnt);
 
+  free(raw_label_data);
   return parsed_label_data;
 }
 
@@ -65,5 +68,5 @@ void mnist_init() {
   MNIST.test_images = _parse_image_file(TEST_IMAGES_PATH, TEST_EXAMPLE_CNT);
 
   MNIST.train_labels = _parse_label_file(TRAIN_LABELS_PATH, TRAIN_EXAMPLE_CNT);
-  MNIST.train_labels = _parse_label_file(TEST_LABELS_PATH, TEST_EXAMPLE_CNT);
+  MNIST.test_labels = _parse_label_file(TEST_LABELS_PATH, TEST_EXAMPLE_CNT);
 }

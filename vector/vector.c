@@ -27,6 +27,13 @@ void free_svector(SVector vector) {
   free(vector);
 }
 
+SVector copy_svector(SVector vector) {
+  SVector copy = new_svector(vector->length, FILL_ZERO);
+  for (int i = 0; i < vector->length; i++)
+    copy->vals[i] = vector->vals[i];
+  return copy;
+}
+
 Vector new_vector(int length, enum FillType fill_type) {
   Vector vector = (Vector) malloc(sizeof(double) * length);
   for (int i = 0; i < length; i++)
