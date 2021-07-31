@@ -1,4 +1,5 @@
 main.o
 main.o.dSYM/
 res/
+media/
 .DS_Store

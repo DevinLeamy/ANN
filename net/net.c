@@ -193,7 +193,7 @@ void test(Net net, struct MNIST MNIST) {
 void train(Net net, struct MNIST MNIST, int epochs, int batch_sz) {
   SVector *inputs  = MNIST.train_images;
   SVector *outputs = MNIST.train_labels;
-  for (int epoch = 0; epoch < epochs; epoch++) {
+  for (int epoch = 0; epoch <= epochs; epoch++) {
     int *batch_indices = get_batch_indices(TRAIN_EXAMPLE_CNT, batch_sz);
     for (int i = 0; i < batch_sz; i++) {
       SVector x = inputs[batch_indices[i]];

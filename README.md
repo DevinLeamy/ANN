@@ -2,7 +2,7 @@
 Throwing Pytorch to the Curb
 
 Tackling MNIST with the standard library in C. <br/>
-Best accuracy: _70%_
+Best accuracy: _95.65%_
 
 Clone the repository and download [MNIST](http://yann.lecun.com/exdb/mnist/) into:
 - `res/train_images.gz`
