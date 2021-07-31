@@ -29,6 +29,6 @@ Net new_net(int *, double learning_rate);
 Cache forward(Net, SVector);
 void backwards(Net, Cache, SVector);
 void train(Net, struct MNIST, int, int);
-double test(Net, struct MNIST);
+void test(Net, struct MNIST);
 
 #endif

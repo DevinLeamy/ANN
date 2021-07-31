@@ -10,10 +10,14 @@ double initialize_value(enum FillType fill_type) {
   return 0.0;
 }
 
+void display_svector(SVector vector) {
+  display_vector(vector->length, vector->vals);
+}
+
 void display_vector(int length, Vector vector) {
   for (int i = 0; i < length; i++) 
     printf("%5.3f ", vector[i]);
-  puts("\n");
+  printf("\n");
 }
 
 void free_vector(Vector vector) {

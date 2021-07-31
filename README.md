@@ -1,8 +1,14 @@
-# MNIST-in-C
-Cause who uses libraries, right?
+# MNIST-In-C
+Throwing Pytorch to the Curb
 
-Components:
-- Matrix
-- Layer
-- Node
-- Edge
+Tackling MNIST with the standard library in C. <br/>
+Best accuracy: _70%_
+
+Clone the repository and download [MNIST](http://yann.lecun.com/exdb/mnist/) into:
+- `res/train_images.gz`
+- `res/train_labels.gz`
+- `res/test_images.gz`
+- `res/test_labels.gz`
+
+Build and run with `make`
+

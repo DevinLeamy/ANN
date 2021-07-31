@@ -4,16 +4,19 @@
 #include "math/math.h"
 #include "net/net.h"
 
+int LAYERS[] = { 784, 128, 64, 10 };
+double LEARNING_RATE = 0.01;
+int EPOCHS = 10000; 
+int BATCH_SIZE = 128;
+ 
 int main()
 {
-  math_init();
-  mnist_init();
+  initialize_math();
+  initialize_mnist();
 
-  int layers[] = { 784, 128, 64, 10 };
-  double learning_rate = 0.005;
-  Net net = new_net(layers, learning_rate);
+  Net net = new_net(LAYERS, LEARNING_RATE);
+  train(net, MNIST, EPOCHS, BATCH_SIZE);
 
-  train(net, MNIST, 1000, 128);
-  // test(net, MNIST);
+  free_mnist();
   return 0;
 }

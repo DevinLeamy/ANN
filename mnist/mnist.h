@@ -32,6 +32,7 @@ struct MNIST {
 // global mnist
 struct MNIST mnist;
 
-void mnist_init();
+void initialize_mnist();
+void free_mnist();
 
 #endif

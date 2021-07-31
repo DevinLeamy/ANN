@@ -1,14 +1,19 @@
 #include "math.h"
 
-// normalize on (-1, 1)
+// (-1, 1)
 static double _normalize(long min_x, long max_x, long x) {
-  return (double) (x - min_x) / (max_x - min_x);
+  return (double) 2.0 * (x - min_x) / (max_x - min_x) - 1.0;
 }
 
-// range(-1, 1) 
+// (-1, 1) 
 double random_double() {
   long x = rand(); 
-  return _normalize(0l, RAND_MAX, x);
+  return _normalize(0, RAND_MAX, x);
+}
+
+// [0, max) 
+int random_int(int max) {
+  return rand() % max;
 }
 
 double softmax(SVector v, int index, int derivative) {
@@ -53,6 +58,15 @@ SVector sigmoid_vector(SVector v, int derivative) {
   return res;
 }
 
+SVector square_vector(SVector v, int modify) {
+  return apply_vector(v, square, modify);
+}
+
+double mean_vector(SVector v) {
+  double sum = sum_vector(v); 
+  return average(sum, v->length);
+}
+
 double sum_vector(SVector v) {
   double sum = 0.0;
   for (int i = 0; i < v->length; i++)
@@ -82,8 +96,12 @@ SVector dot_matrix_vector(SMatrix m, SVector v) {
   return prod;
 }
 
-double percentage(int a, int b) {
-  return a / (double) b * 100;
+double square(double x) {
+  return x * x;
+}
+
+double average(double x, double total) {
+  return x / (double) total * 100;
 }
 
 double add(double a, double b) {
@@ -203,6 +221,6 @@ int argmax_vector(SVector v) {
   return max_idx;
 }
 
-void math_init() {
+void initialize_math() {
   srand(time(NULL));
 }

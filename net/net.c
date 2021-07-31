@@ -20,18 +20,19 @@ SVector get_activated(SVector previous_inactivated, ActivationFn activation) {
 
 Cache forward(Net net, SVector x) {
   Cache cache = new_cache();
-  cache->l0->activated = copy_svector(x);
+  CLayer l0 = cache->l0; CLayer l1 = cache->l1;
+  CLayer l2 = cache->l2; CLayer l3 = cache->l3;
 
-  // puts("forward_start");
-  cache->l1->inactivated = get_inactivated(cache->l0->activated, net->l1->weights, net->l1->biases);
-  cache->l1->activated = get_activated(cache->l1->inactivated, net->l1->activation);
+  l0->activated = copy_svector(x);
 
-  cache->l2->inactivated = get_inactivated(cache->l1->activated, net->l2->weights, net->l2->biases);
-  cache->l2->activated = get_activated(cache->l2->inactivated, net->l2->activation);
+  l1->inactivated = get_inactivated(l0->activated, net->l1->weights, net->l1->biases);
+  l1->activated = get_activated(l1->inactivated, net->l1->activation);
 
-  cache->l3->inactivated = get_inactivated(cache->l2->activated, net->l3->weights, net->l3->biases);
-  cache->l3->activated = get_activated(cache->l3->inactivated, net->l3->activation);
-  // puts("forward_end");
+  l2->inactivated = get_inactivated(l1->activated, net->l2->weights, net->l2->biases);
+  l2->activated = get_activated(l2->inactivated, net->l2->activation);
+
+  l3->inactivated = get_inactivated(l2->activated, net->l3->weights, net->l3->biases);
+  l3->activated = get_activated(l3->inactivated, net->l3->activation);
 
   return cache;
 }
@@ -85,34 +86,43 @@ SVector get_activated_grads(SMatrix weights, SVector bias_grads) {
 }
 
 void backwards(Net net, Cache cache, SVector y) {
-  // puts("back_start");
   SVector y_hat = cache->l3->activated; 
+  CLayer l0 = cache->l0; CLayer l1 = cache->l1;
+  CLayer l2 = cache->l2; CLayer l3 = cache->l3; 
 
   // create a function for each layer
   {
-    cache->l3->activated_grads = get_derivative_cost_wrt_activated(y_hat, y); 
-    cache->l3->inactivated_grads = get_derivate_activated_wrt_inactivated(cache->l3->inactivated, net->l3->activation);
+    l3->activated_grads = get_derivative_cost_wrt_activated(y_hat, y); 
+    l3->inactivated_grads = get_derivate_activated_wrt_inactivated(l3->inactivated, net->l3->activation);
 
-    cache->l3->bias_grads = get_bias_grads(cache->l3->inactivated_grads, cache->l3->activated_grads);
-    cache->l3->weight_grads = get_weight_grads(cache->l2->activated, cache->l3->bias_grads);
+    l3->bias_grads = get_bias_grads(l3->inactivated_grads, l3->activated_grads);
+    l3->weight_grads = get_weight_grads(l2->activated, l3->bias_grads);
   }
 
   {
-    cache->l2->activated_grads = get_activated_grads(net->l3->weights, cache->l3->bias_grads); 
-    cache->l2->inactivated_grads = get_derivate_activated_wrt_inactivated(cache->l2->inactivated, net->l2->activation);
+    l2->activated_grads = get_activated_grads(net->l3->weights, l3->bias_grads); 
+    l2->inactivated_grads = get_derivate_activated_wrt_inactivated(l2->inactivated, net->l2->activation);
 
-    cache->l2->bias_grads = get_bias_grads(cache->l2->inactivated_grads, cache->l2->activated_grads);
-    cache->l2->weight_grads = get_weight_grads(cache->l1->activated, cache->l2->bias_grads);
+    l2->bias_grads = get_bias_grads(l2->inactivated_grads, l2->activated_grads);
+    l2->weight_grads = get_weight_grads(l1->activated, l2->bias_grads);
   }
 
   {
-    cache->l1->activated_grads = get_activated_grads(net->l2->weights, cache->l2->bias_grads); 
-    cache->l1->inactivated_grads = get_derivate_activated_wrt_inactivated(cache->l1->inactivated, net->l1->activation);
+    l1->activated_grads = get_activated_grads(net->l2->weights, l2->bias_grads); 
+    l1->inactivated_grads = get_derivate_activated_wrt_inactivated(l1->inactivated, net->l1->activation);
 
-    cache->l1->bias_grads = get_bias_grads(cache->l1->inactivated_grads, cache->l1->activated_grads);
-    cache->l1->weight_grads = get_weight_grads(cache->l0->activated, cache->l1->bias_grads);
+    l1->bias_grads = get_bias_grads(l1->inactivated_grads, l1->activated_grads);
+    l1->weight_grads = get_weight_grads(l0->activated, l1->bias_grads);
   }
-  // puts("back_end");
+}
+
+double compute_loss(SVector y_hat, SVector y) {
+  SVector diff = sub_vectors(y_hat, y, MODIFY_FALSE);
+  square_vector(diff, MODIFY_TRUE); 
+  double loss = sum_vector(diff);
+
+  free_svector(diff);
+  return loss;
 }
 
 static SMatrix _new_weights(int p_nodes, int n_nodes) {
@@ -137,16 +147,25 @@ static Layer _new_layer(int p_nodes, int n_nodes, ActivationFn activation) {
 int *get_batch_indices(int example_cnt, int batch_size) {
   int *indices = (int *) malloc(sizeof(int) * batch_size);
   for (int i = 0; i < batch_size; i++)
-    indices[i] = rand() % example_cnt;
+    indices[i] = random_int(example_cnt); 
   return indices;
 }
 
-double test(Net net, struct MNIST MNIST) {
+void display_results(Net net, SVector guesses, SVector accuracy_vec, SVector loss_vec) {
+  printf("Accuracy: %3.2f%%\n", mean_vector(accuracy_vec));
+  printf("Loss:   : %3.2f\n", mean_vector(loss_vec));
+  for (int i = 0; i < net->OUT; i++)
+    printf("%d: %d ", i, (int) guesses->vals[i]);
+  puts("\n");
+}
+
+void test(Net net, struct MNIST MNIST) {
   SVector *inputs  = MNIST.test_images;
   SVector *outputs = MNIST.test_labels;
 
-  int correct_guesses = 0;
-  SVector guesses = new_svector(10, FILL_ZERO);
+  SVector accuracy_vec = new_svector(TEST_EXAMPLE_CNT, FILL_ZERO);
+  SVector loss_vec = new_svector(TEST_EXAMPLE_CNT, FILL_ZERO);
+  SVector guesses = new_svector(net->OUT, FILL_ZERO);
 
   for (int i = 0; i < TEST_EXAMPLE_CNT; i++) {
     SVector x = inputs[i];
@@ -154,26 +173,26 @@ double test(Net net, struct MNIST MNIST) {
 
     Cache cache = forward(net, x);
 
+    double loss = compute_loss(cache->l3->activated, y);
     int guess = argmax_vector(cache->l3->activated);
     int ans   = argmax_vector(y);
 
-    if (guess == ans)
-      correct_guesses++;
+    accuracy_vec->vals[i] = guess == ans;
+    loss_vec->vals[i] = loss;
     guesses->vals[guess]++;
+
+    free_cache(cache);
   }
+  display_results(net, guesses, accuracy_vec, loss_vec);
 
-  double accuracy = percentage(correct_guesses, TEST_EXAMPLE_CNT); 
-  printf("Accuracy: %0.2f\n", accuracy);
-  display_vector(guesses->length, guesses->vals);
-
+  free_svector(accuracy_vec);
+  free_svector(loss_vec);
   free_svector(guesses);
-  return accuracy;
 }
 
 void train(Net net, struct MNIST MNIST, int epochs, int batch_sz) {
   SVector *inputs  = MNIST.train_images;
   SVector *outputs = MNIST.train_labels;
-
   for (int epoch = 0; epoch < epochs; epoch++) {
     int *batch_indices = get_batch_indices(TRAIN_EXAMPLE_CNT, batch_sz);
     for (int i = 0; i < batch_sz; i++) {
@@ -181,16 +200,17 @@ void train(Net net, struct MNIST MNIST, int epochs, int batch_sz) {
       SVector y = outputs[batch_indices[i]];
 
       Cache cache = forward(net, x);
-      display_vector(cache->l1->inactivated->length, cache->l1->inactivated->vals);
-      // display_vector(cache->l3->activated->length, cache->l3->activated->vals);
-
       backwards(net, cache, y);
       apply_gradients(net, cache);
 
       free_cache(cache);
     }
-    if (epoch % 10 == 0)
+    if (epoch % 100 == 0) {
+      printf("EPOCH: #%d\n", epoch);
       test(net, MNIST);
+    }
+
+    free(batch_indices);
   }
 }
 
@@ -206,7 +226,6 @@ Net new_net(int *layers, double learning_rate) {
 
   net->l1 = _new_layer(net->IN, net->H1, sigmoid_vector);
   net->l2 = _new_layer(net->H1, net->H2, sigmoid_vector);
-  // net->l3 = _new_layer(net->H2, net->OUT, sigmoid_vector);
   net->l3 = _new_layer(net->H2, net->OUT, softmax_vector);
 
   return net;

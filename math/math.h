@@ -18,12 +18,14 @@
 #include <stdlib.h>
 
 // util
+int random_int(int);
 double random_double();
+double average(double, double);
 double add(double, double);
 double sub(double, double);
+double square(double);
 double multiply(double, double);
-double percentage(int, int);
-void math_init();
+void initialize_math();
 
 // activations
 double softmax(SVector, int, int);
@@ -49,12 +51,16 @@ SMatrix outer_product(SVector, SVector);
 SMatrix apply_matrix(SMatrix, double (*func)(double), int);
 SVector apply_vector(SVector, double (*func)(double), int);
 
+
 double sum_vector(SVector);
 double sum_matrix(SMatrix);
 
 SMatrix transpose_matrix(SMatrix);
 SMatrix scale_matrix(SMatrix, double, int);
 SVector scale_vector(SVector, double, int);
+SVector square_vector(SVector, int);
+
+double mean_vector(SVector);
 
 int argmax_vector(SVector);
 

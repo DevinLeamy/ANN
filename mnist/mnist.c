@@ -62,8 +62,18 @@ static SVector *_parse_label_file(char *path, int label_cnt) {
   return parsed_label_data;
 }
 
+void free_mnist() {
+  for (int i = 0; i < TRAIN_EXAMPLE_CNT; i++) {
+    free_svector(MNIST.train_images[i]);
+    free_svector(MNIST.train_labels[i]);
+  }
+  for (int i = 0; i < TEST_EXAMPLE_CNT; i++) {
+    free_svector(MNIST.test_images[i]);
+    free_svector(MNIST.test_labels[i]);
+  }
+}
 
-void mnist_init() {
+void initialize_mnist() {
   MNIST.train_images = _parse_image_file(TRAIN_IMAGES_PATH, TRAIN_EXAMPLE_CNT);
   MNIST.test_images = _parse_image_file(TEST_IMAGES_PATH, TEST_EXAMPLE_CNT);
 

@@ -19,6 +19,7 @@ Vector new_vector(int, enum FillType);
 SVector new_svector(int, enum FillType);
 
 SVector copy_svector(SVector);
+void display_svector(SVector); 
 void display_vector(int, Vector); 
 
 void free_vector(Vector);
